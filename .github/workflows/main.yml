@@ -24,7 +24,7 @@ jobs:
           name: app-ios.ipa
           path: /Users/runner/work/PicaComic/PicaComic/build/ios/iphoneos/app-ios.ipa
   Build_MacOS:
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v3
       - uses: subosito/flutter-action@v2
