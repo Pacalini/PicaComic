@@ -4,17 +4,17 @@ on:
   workflow_dispatch: {}
 jobs:
   Build_IOS_SIMULATOR:
-    runs-on: macos-13
+    runs-on: macos-15
     steps:
-    - uses: actions/checkout@v3
-    - uses: subosito/flutter-action@v2
-      with:
-        channel: 'stable'
-        architecture: x64
-    - run: sudo xcode-select --switch /Applications/Xcode_14.3.1.app
-    - run: flutter pub get
-    - run: flutter build ios --simulator --no-codesign
-    - uses: actions/upload-artifact@v3
-      with:
-        name: build_files
-        path: /Users/runner/work/PicaComic/PicaComic/build/ios/iphonesimulator
+      - uses: actions/checkout@v3
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: "stable"
+          architecture: x64
+      - run: sudo xcode-select --switch /Applications/Xcode_16.4.app
+      - run: flutter pub get
+      - run: flutter build ios --simulator --no-codesign
+      - uses: actions/upload-artifact@v3
+        with:
+          name: build_files
+          path: /Users/runner/work/PicaComic/PicaComic/build/ios/iphonesimulator
