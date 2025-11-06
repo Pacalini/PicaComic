@@ -1,6 +1,6 @@
 # Pica Comic
 
-[![flutter](https://img.shields.io/badge/flutter-3.35.1-blue)](https://flutter.dev/)
+[![flutter](https://img.shields.io/badge/flutter-3.35.7-blue)](https://flutter.dev/)
 [![License](https://img.shields.io/github/license/Pacalini/PicaComic)](https://github.com/Pacalini/PicaComic/blob/master/LICENSE)
 [![Download](https://img.shields.io/github/v/release/Pacalini/PicaComic)](https://github.com/Pacalini/PicaComic/releases)
 [![stars](https://img.shields.io/github/stars/Pacalini/PicaComic)](https://github.com/Pacalini/PicaComic/stargazers)
@@ -38,7 +38,7 @@ git clone https://github.com/Pacalini/PicaComic
 
 ### Built-in Comic Source
 
-Currently, Pica Comic has 5 built-in comic sources:
+Pica Comic has 6 built-in comic sources:
 - picacg
 - e-hentai/exhentai
 - jmcomic
