@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:pica_comic/base.dart';
 import 'package:pica_comic/components/components.dart';
 import 'package:pica_comic/pages/ehentai/eh_user_cookie_parser.dart';
 import 'package:pica_comic/pages/webview.dart';
@@ -229,6 +230,11 @@ class _EhLoginPageState extends State<EhLoginPage> {
                 "https://forums.e-hentai.org/index.php?act=Login&CODE=00",
             onTitleChange: (title, controller) async {
               if (title == "E-Hentai Forums") {
+                var ua = await controller.getUA();
+                if(ua != null){
+                  appdata.implicitData[3] = ua;
+                  appdata.writeImplicitData();
+                }
                 var cookies1 =
                     await controller.getCookies("https://e-hentai.org") ?? {};
                 var cookies2 =
@@ -251,6 +257,11 @@ class _EhLoginPageState extends State<EhLoginPage> {
           initialUrl: "https://forums.e-hentai.org/index.php?act=Login&CODE=00",
           onTitleChange: (url, webview) async {
             if (url == "E-Hentai Forums") {
+              var ua = webview.userAgent;
+              if(ua != null){
+                appdata.implicitData[3] = ua;
+                appdata.writeImplicitData();
+              }
               var cookies1 =
                   await webview.getCookies("https://e-hentai.org");
               var cookies2 =
