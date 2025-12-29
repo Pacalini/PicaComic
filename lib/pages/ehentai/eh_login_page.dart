@@ -313,7 +313,8 @@ class _EhLoginPageState extends State<EhLoginPage> {
         .cookieJar
         .saveFromResponse(Uri.parse("https://exhentai.org"), cookies);
 
-    EhNetwork().getUserName().then((b) {
+    // EhNetwork().getUserName().then((b) {
+    EhNetwork().validateCookies().then((b) {
       if(!mounted)  return;
       if (b) {
         context.pop();

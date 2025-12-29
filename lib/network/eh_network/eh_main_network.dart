@@ -267,6 +267,37 @@ class EhNetwork {
     }
   }
 
+  Future<bool> validateCookies() async {
+    String url = "https://e-hentai.org/home.php";
+    await getCookies(false, url);
+    var options = BaseOptions(
+        connectTimeout: const Duration(seconds: 8),
+        sendTimeout: const Duration(seconds: 8),
+        receiveTimeout: const Duration(seconds: 8),
+        followRedirects: false,
+        headers: {
+          "user-agent": webUA,
+        });
+    var dio = CachedNetwork();
+    try {
+      var res = await dio.get(
+          url,
+          options,
+          cookieJar: cookieJar,
+          expiredTime: CacheExpiredTime.no
+      );
+      if (res.statusCode == 200) {
+        ehentai.data['name'] = "PLACEHOLDER";
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e, s) {
+      LogManager.addLog(LogLevel.error, "Network", "$e\n$s");
+      return false;
+    }
+  }
+
   ///解析星星的html元素的位置属性, 返回评分
   double getStarsFromPosition(String position) {
     int i = 0;

@@ -163,8 +163,9 @@ final ehentai = ComicSource.named(
     },
     infoItems: [
       AccountInfoItem(
-        title: "用户名",
-        data: () => ComicSource.find('ehentai')!.data['name'] ?? '',
+        title: "已登录",
+        // title: "用户名",
+        // data: () => ComicSource.find('ehentai')!.data['name'] ?? '',
       ),
       AccountInfoItem(
         title: "",
