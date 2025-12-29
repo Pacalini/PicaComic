@@ -103,6 +103,8 @@ class HitomiComic with HistoryMixin {
   String type;
   List<String>? artists;
   String lang;
+  List<Tag>? parodys;
+  List<Tag>? characters;
   List<Tag> tags;
   String time;
   List<HitomiFile> files;
@@ -115,6 +117,8 @@ class HitomiComic with HistoryMixin {
     this.type,
     this.artists,
     this.lang,
+    this.parodys,
+    this.characters,
     this.tags,
     this.time,
     this.files,
@@ -126,6 +130,12 @@ class HitomiComic with HistoryMixin {
     }
     if (artists == null || artists!.isEmpty) {
       artists = ["N/A"];
+    }
+    if (parodys == null || parodys!.isEmpty) {
+      parodys = [Tag("N/A", "")];
+    }
+    if (characters == null || characters!.isEmpty) {
+      characters = [];
     }
   }
 
@@ -147,6 +157,8 @@ class HitomiComic with HistoryMixin {
         artists = List<String>.from(map["artists"]),
         lang = map["lang"],
         time = map["time"],
+        parodys = [],
+        characters = [],
         tags = [],
         related = [],
         group = [],

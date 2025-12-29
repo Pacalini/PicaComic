@@ -15,7 +15,6 @@ import 'package:pica_comic/pages/hitomi/hitomi_search.dart';
 import 'package:pica_comic/pages/reader/comic_reading_page.dart';
 import 'package:pica_comic/pages/search_result_page.dart';
 import 'package:pica_comic/tools/extensions.dart';
-import 'package:pica_comic/tools/tags_translation.dart';
 import 'package:pica_comic/tools/translations.dart';
 
 class HitomiComicPage extends BaseComicPage<HitomiComic> {
@@ -101,13 +100,19 @@ class HitomiComicPage extends BaseComicPage<HitomiComic> {
 
   @override
   Map<String, List<String>>? get tags => {
-        "Artists".categoryTextDynamic: data!.artists ?? ["N/A"],
-        "Groups".categoryTextDynamic: data!.group,
-        "Categories".categoryTextDynamic: data!.type.toList(),
-        "Time".categoryTextDynamic: data!.time.toList(),
-        "Languages".categoryTextDynamic: data!.lang.toList(),
-        "Tags".categoryTextDynamic:
-            List.generate(data!.tags.length, (index) => data!.tags[index].name)
+        "Artists": data!.artists ?? ["N/A"],
+        "Groups": data!.group,
+        "Categories": data!.type.toList(),
+        "Time": data!.time.toList(),
+        "Languages": data!.lang.toList(),
+        "Tags":
+            List.generate(data!.tags.length, (index) => data!.tags[index].name),
+        "Series": data!.parodys != null
+            ? List.generate(data!.parodys!.length, (index) => data!.parodys![index].name)
+            : [],
+        "Characters": data!.characters != null
+            ? List.generate(data!.characters!.length, (index) => data!.characters![index].name)
+            : [],
       };
 
   @override
@@ -115,10 +120,37 @@ class HitomiComicPage extends BaseComicPage<HitomiComic> {
 
   @override
   void tapOnTag(String tag, String key) {
-    context.to(() => SearchResultPage(
-          keyword: tag,
+    if (key == "Tags") {
+      if (tag.endsWith(' ♀')) {
+        tag = "female:${tag.replaceLast(" ♀", "")}";
+      } else if (tag.endsWith('♂')) {
+        tag = "male:${tag.replaceLast(" ♂", "")}";
+      } else {
+        tag = "tag:$tag";
+      }
+    }
+    if (tag.contains(" ")) {
+      tag = tag.replaceAll(' ', '_');
+    }
+    String? categoryParam = switch (key) {
+      "Artists" => "artist:$tag",
+      "Groups" => "group:$tag",
+      "Categories" => "type:$tag",
+      "Languages" => "language:$tag",
+      "Series" => "series:$tag",
+      "Characters" => "character:$tag",
+      "Tags" => tag,
+      "Time" => null,
+      _ => null
+    };
+    if (categoryParam != null && tag != "N/A") {
+      context.to(
+            () => SearchResultPage(
+          keyword: categoryParam,
           sourceKey: 'hitomi',
-        ));
+        ),
+      );
+    }
   }
 
   @override

@@ -102,6 +102,10 @@ class HiNetwork{
           type = tr.children[1].text;
         } else if (tr.firstChild!.text == "Language") {
           lang = tr.children[1].text;
+        } else if (tr.firstChild!.text == "Series") {
+          for (var liA in tr.querySelectorAll("td.series-list > ul > li > a")) {
+            if (liA.text != "N/A") tags.add(Tag(liA.text, liA.attributes["href"]!));
+          }
         } else if (tr.firstChild!.text == "Tags") {
           for (var liA in tr.querySelectorAll("td.relatedtags > ul > li > a")) {
             tags.add(Tag(liA.text, liA.attributes["href"]!));
@@ -154,11 +158,24 @@ class HiNetwork{
     //直接将前面的"var galleryinfo = "删掉, 然后作为json解析即可
     var data = res.data.substring(res.data.indexOf('{'));
     var json = const JsonDecoder().convert(data);
+    var parodys = <Tag>[];
+    var characters = <Tag>[];
     var tags = <Tag>[];
     var files = <HitomiFile>[];
 
+    for(var parody in json["parodys"]??[]){
+      parodys.add(Tag(parody["parody"], "https://ltn.$baseDomain${parody["url"]}"));
+    }
+
+    for(var character in json["characters"]??[]){
+      characters.add(Tag(character["character"], "https://ltn.$baseDomain${character["url"]}"));
+    }
+
     for(var tag in json["tags"]??[]){
-      tags.add(Tag(tag["tag"], "https://ltn.$baseDomain${tag["url"]}"));
+      String text = tag["tag"];
+      if(tag["female"] == "1") text += " ♀";
+      if(tag["male"] == "1") text += " ♂";
+      tags.add(Tag(text, "https://ltn.$baseDomain${tag["url"]}"));
     }
 
     for(var file in json["files"]??[]){
@@ -172,7 +189,9 @@ class HiNetwork{
       List<int>.from(json["related"]),
       json["type"],
       List<String>.from((json["artists"]??[]).map((e) => e["artist"]).toList()),
-      json["language_localname"] ?? "",
+      json["language"] ?? "",
+      parodys,
+      characters,
       tags,
       json["date"],
       files,

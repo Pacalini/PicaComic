@@ -54,7 +54,15 @@ extension TagsTranslation on String{
   }
 
   /// translate tag's text to chinese
-  String get translateTagsToCN => _translateTags(this);
+  /// *hitomi: exclude gender symbol
+  String get translateTagsToCN  {
+    if (endsWith(" ♀")) {
+      return "${_translateTags(replaceLast(" ♀", ''))} ♀";
+    } else if (contains(" ♂")) {
+      return "${_translateTags(replaceLast(" ♂", ''))} ♂";
+    }
+    return _translateTags(this);
+  }
 
   static String translationTagWithNamespace(String text, String namespace){
     text = text.toLowerCase();
@@ -113,6 +121,7 @@ extension TagsTranslation on String{
     "Groups": "团队",
     "Tags": "标签",
     "Parodies": "原作",
+    "Series": "原作",
     "Categories": "分类",
     "Time": "时间"
   };
@@ -135,6 +144,7 @@ extension TagsTranslation on String{
     "Groups": "團隊",
     "Tags": "標籤",
     "Parodies": "原作",
+    "Series": "原作",
     "Categories": "分類",
     "Time": "時間"
   };
