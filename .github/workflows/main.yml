@@ -25,14 +25,15 @@ jobs:
           name: app-ios.ipa
           path: /Users/runner/work/PicaComic/PicaComic/build/ios/iphoneos/app-ios.ipa
   Build_MacOS:
-    runs-on: macos-15
+    runs-on: macos-15.6
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
           channel: "stable"
           architecture: x64
-      - run: sudo xcode-select --switch /Applications/Xcode_16.4.app
+          flutter-version: 3.3.10
+      - run: sudo xcode-select --switch /Applications/Xcode_26.0.app
       - run: flutter pub get
       - run: flutter build macos --release
       - uses: actions/upload-artifact@v4
