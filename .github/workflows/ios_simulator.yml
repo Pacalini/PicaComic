@@ -14,7 +14,7 @@ jobs:
       - run: sudo xcode-select --switch /Applications/Xcode_16.4.app
       - run: flutter pub get
       - run: flutter build ios --simulator --no-codesign
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: build_files
           path: /Users/runner/work/PicaComic/PicaComic/build/ios/iphonesimulator
