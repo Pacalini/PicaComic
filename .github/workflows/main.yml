@@ -4,14 +4,13 @@ on:
   workflow_dispatch: {}
 jobs:
   Build_IOS:
-    runs-on: macos-15
+    runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
           architecture: x64
-          flutter-version-file: pubspec.yaml 
       - run: sudo xcode-select --switch /Applications/Xcode_16.4.app
       - run: flutter pub get
       - run: flutter build ios --release --no-codesign
