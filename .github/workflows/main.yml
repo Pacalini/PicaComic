@@ -11,6 +11,7 @@ jobs:
         with:
           channel: stable
           architecture: x64
+          flutter-version: 3.3.10
       - run: sudo xcode-select --switch /Applications/Xcode_16.4.app
       - run: flutter pub get
       - run: flutter build ios --release --no-codesign
