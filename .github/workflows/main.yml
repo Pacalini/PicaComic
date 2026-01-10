@@ -11,7 +11,6 @@ jobs:
         with:
           channel: stable
           architecture: x64
-          flutter-version: 3.3.10
       - uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: 'latest-stable'
@@ -34,7 +33,6 @@ jobs:
         with:
           channel: "stable"
           architecture: x64
-          flutter-version: 3.3.10
       - uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: 'latest-stable'
