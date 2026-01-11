@@ -36,13 +36,8 @@ class _FloatingSearchBar extends StatefulWidget {
 }
 
 class _FloatingSearchBarState extends State<_FloatingSearchBar> {
-  bool isInit = true;
   @override
   Widget build(BuildContext context) {
-    if (isInit) {
-      widget.focusNode?.requestFocus();
-    }
-    isInit = false;
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
     final TextTheme textTheme = Theme.of(context).textTheme;
     var padding = 12.0;
