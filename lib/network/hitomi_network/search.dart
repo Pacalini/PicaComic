@@ -29,14 +29,24 @@ class HitomiSearch{
     var terms = keyword.toLowerCase().trim().split(RegExp(r"\s+"));
     var negativeTerms = <String>[];
     var positiveTerms = <String>[];
+    var languageTerms = <String>[];
     for(var term in terms){
       term = term.replaceAll('_', ' ');
       if (term.startsWith('-')) {
         negativeTerms.add(term.replaceFirst('-', ''));
+      } else if (term.startsWith("language:")) {
+        languageTerms.add(term);
       } else {
         positiveTerms.add(term);
       }
     }
+
+    if(languageTerms.length == 1 && positiveTerms.length == 1 && positiveTerms[0].contains(':')) {
+      results = await getGalleryIdsForTermAndLanguage(positiveTerms[0], languageTerms[0].split(":")[1]);
+      return Res(results);
+    }
+    positiveTerms += languageTerms;
+
     //first results
     if(positiveTerms.isEmpty){
       results = await getGalleryIdsFromNozomi(null, 'index', 'all');
@@ -153,6 +163,19 @@ class HitomiSearch{
         return getGalleryIdsFromData(data);
       }
     }
+  }
+
+  Future<List<int>> getGalleryIdsForTermAndLanguage(String term, String language) async{
+    final ns = term.split(':')[0];
+    var tag = term.split(':')[1];
+    String? area = ns;
+
+    if(ns == 'female' || ns == 'male'){
+      area = 'tag';
+      tag = term[0];
+    }
+
+    return getGalleryIdsFromNozomi(area, tag, language);
   }
 
   Uint8List hashTerm(String term){
