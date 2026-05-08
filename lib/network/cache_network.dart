@@ -45,7 +45,7 @@ class CachedNetwork {
         res.statusCode, res.realUri.toString(), res.headers.map);
   }
 
-  void delete(String url) async {
+  Future<void> delete(String url) async {
     await CacheManager().delete(url);
   }
 }
@@ -56,7 +56,7 @@ enum CacheExpiredTime {
   long(604800000),
   persistent(0);
 
-  ///过期时间, 单位为微秒
+  ///过期时间, 单位为毫秒
   final int time;
 
   const CacheExpiredTime(this.time);
