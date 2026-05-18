@@ -53,14 +53,17 @@ extension ToolBar on ComicReadingPage {
                     const SizedBox(
                       width: 16,
                     ),
-                    Container(
-                      height: 24,
-                      padding: const EdgeInsets.fromLTRB(6, 2, 6, 0),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.tertiaryContainer,
-                        borderRadius: BorderRadius.circular(8),
+                    GestureDetector(
+                      onTap: () => _showPageJumpDialog(context, logic),
+                      child: Container(
+                        height: 24,
+                        padding: const EdgeInsets.fromLTRB(6, 2, 6, 0),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.tertiaryContainer,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(text),
                       ),
-                      child: Text(text),
                     ),
                     const Spacer(),
                     if (App.isWindows)
@@ -437,32 +440,129 @@ extension ToolBar on ComicReadingPage {
           var text = readingData.hasEp
               ? "$epName : ${comicReadingPageLogic.index}/${comicReadingPageLogic.urls.length}"
               : "${comicReadingPageLogic.index}/${comicReadingPageLogic.urls.length}";
-          return Stack(
-            children: [
-              Text(
-                text,
-                style: TextStyle(
-                  fontSize: 14,
-                  foreground: Paint()
-                    ..style = PaintingStyle.stroke
-                    ..strokeWidth = 1.4
-                    ..color = (useDarkBackground ||
-                            Theme.of(context).brightness == Brightness.dark)
-                        ? Colors.black
-                        : Colors.white,
+          return GestureDetector(
+            onTap: () => _showPageJumpDialog(context, logic),
+            child: Stack(
+              children: [
+                Text(
+                  text,
+                  style: TextStyle(
+                    fontSize: 14,
+                    foreground: Paint()
+                      ..style = PaintingStyle.stroke
+                      ..strokeWidth = 1.4
+                      ..color = (useDarkBackground ||
+                              Theme.of(context).brightness == Brightness.dark)
+                          ? Colors.black
+                          : Colors.white,
+                  ),
                 ),
-              ),
-              Text(
-                text,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: useDarkBackground ? Colors.white : null,
+                Text(
+                  text,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: useDarkBackground ? Colors.white : null,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           );
         },
       ),
     );
+  }
+
+  void _showPageJumpDialog(BuildContext context, ComicReadingPageLogic logic) {
+    final maxPage = logic.urls.length;
+    if (maxPage <= 0) {
+      showToast(message: "没有可跳转的页面".tl);
+      return;
+    }
+    final controller = TextEditingController(text: logic.index.toString());
+    String? errorText;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text("跳转到页".tl),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    "请输入 @min-@max 之间的页数"
+                        .tlParams({"min": "1", "max": maxPage.toString()}),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: controller,
+                    keyboardType: TextInputType.number,
+                    autofocus: true,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[0-9]'))
+                    ],
+                    decoration: InputDecoration(
+                      hintText: "页数".tl,
+                      errorText: errorText,
+                      border: const OutlineInputBorder(),
+                    ),
+                    onSubmitted: (value) {
+                      final err = _validatePageInput(value, maxPage);
+                      if (err != null) {
+                        setState(() => errorText = err);
+                      } else {
+                        final page = int.parse(value);
+                        Navigator.pop(dialogContext);
+                        logic.jumpToPage(page, true);
+                      }
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: Text("取消".tl),
+                ),
+                TextButton(
+                  onPressed: () {
+                    final err = _validatePageInput(controller.text, maxPage);
+                    if (err != null) {
+                      setState(() => errorText = err);
+                    } else {
+                      final page = int.parse(controller.text);
+                      Navigator.pop(dialogContext);
+                      logic.jumpToPage(page, true);
+                    }
+                  },
+                  child: Text("确认".tl),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  String? _validatePageInput(String value, int maxPage) {
+    if (value.isEmpty) {
+      return "请输入页数".tl;
+    }
+    final page = int.tryParse(value);
+    if (page == null) {
+      return "请输入有效的数字".tl;
+    }
+    if (page < 1 || page > maxPage) {
+      return "页数超出范围 (@min-@max)"
+          .tlParams({"min": "1", "max": maxPage.toString()});
+    }
+    return null;
   }
 }

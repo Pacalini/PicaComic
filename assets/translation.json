@@ -567,7 +567,14 @@
     "需要下载字体文件(10.1MB), 是否继续?": "需要下載字型文件(10.1MB), 是否繼續?",
     "更新漫画信息": "更新漫畫資訊",
     "此功能已不再受支持": "此功能已不再受支援",
-    "请勿反馈相关问题": "請勿回饋相關問題"
+    "请勿反馈相关问题": "請勿回饋相關問題",
+    "没有可跳转的页面": "沒有可跳轉的頁面",
+    "跳转到页": "跳轉到頁",
+    "请输入 @min-@max 之间的页数": "請輸入 @min-@max 之間的頁數",
+    "页数": "頁數",
+    "请输入页数": "請輸入頁數",
+    "请输入有效的数字": "請輸入有效的數字",
+    "页数超出范围 (@min-@max)": "頁數超出範圍 (@min-@max)"
   },
   "en_US": {
     "有可用更新": "Updates available",
@@ -1141,6 +1148,13 @@
     "需要下载字体文件(10.1MB), 是否继续?": "Download missing fonts file (10.1MB), continue?",
     "更新漫画信息": "Update comic information",
     "此功能已不再受支持": "This feature is no longer supported",
-    "请勿反馈相关问题": "Please DO NOT report related issues"
+    "请勿反馈相关问题": "Please DO NOT report related issues",
+    "没有可跳转的页面": "No pages to jump to",
+    "跳转到页": "Jump to Page",
+    "请输入 @min-@max 之间的页数": "Please enter a page number between @min-@max",
+    "页数": "Page",
+    "请输入页数": "Please enter a page number",
+    "请输入有效的数字": "Please enter a valid number",
+    "页数超出范围 (@min-@max)": "Page out of range (@min-@max)"
   }
 }
