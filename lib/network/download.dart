@@ -558,6 +558,13 @@ extension AddDownloadExt on DownloadManager {
 DownloadedItem? _getComicFromJson(String id, String json, DateTime time, [String? directory]) {
   DownloadedItem comic;
   try {
+        var decoded = jsonDecode(json);
+    if (decoded is! Map<String, dynamic>) {
+      // JSON 数据损坏，不是预期的 Map 类型
+      LogManager.addLog(
+          LogLevel.error, "IO", "Failed to get a downloaded comic info: json is not a Map<String, dynamic>");
+      return null;
+    }
     if (id.contains('-')) {
       comic = CustomDownloadedItem.fromJson(jsonDecode(json));
     } else if (id.startsWith("jm")) {
@@ -653,24 +660,53 @@ abstract mixin class _DownloadDb {
   }
 
   /// order: time, title, subtitle, size
-  List<DownloadedItem> getAll(
-      [String order = 'time', String direction = 'desc']) {
-    var result = _db!.select('''
-      select * from download
-      order by $order $direction
-    ''');
-    return result
-        .map(
-          (e) => _getComicFromJson(
-            e['id'],
-            e['json'],
-            DateTime.fromMillisecondsSinceEpoch(e['time']),
-            e['directory']
-          )!,
-        )
-        .toList();
+List<DownloadedItem> getAll(
+    [String order = 'time', String direction = 'desc']) {
+  var result = _db!.select('''
+    select * from download
+    order by $order $direction
+  ''');
+  var list = <DownloadedItem>[];
+  for (var e in result) {
+    String? id;
+    try {
+      id = e['id'] as String;
+      var item = _getComicFromJson(
+        id,
+        e['json'] as String,
+        DateTime.fromMillisecondsSinceEpoch(e['time'] as int),
+        e['directory'] is String ? e['directory'] as String : null,
+      );
+      if (item != null) {
+        list.add(item);
+      } else {
+        _tryCleanDisk(e['directory']);
+        _safeDelete(id);
+      }
+    } catch (_) {
+      _tryCleanDisk(e['directory']);
+      if (id != null) {
+        _safeDelete(id);
+      }
+    }
   }
+  return list;
+}
 
+void _safeDelete(String id) {
+  try {
+    _deleteFromDb(id);
+  } catch (e) {
+    LogManager.addLog(LogLevel.error, "IO", "Failed to remove download record: $e");
+  }
+}
+void _tryCleanDisk(dynamic directory) {
+  if (directory is! String || directory.isEmpty) return;
+  try {
+    final d = Directory("${DownloadManager().path}/$directory");
+    if (d.existsSync()) d.deleteSync(recursive: true);
+  } catch (_) {}
+}
   static final _cache = <String, String>{};
 
   String getDirectory(String id) {
