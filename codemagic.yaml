@@ -1,0 +1,57 @@
+workflows:
+  ios-workflow:
+    name: iOS workflow
+    environment:
+      #ios_signing:
+      #  distribution_type: development
+      #  bundle_identifier: com.github.pacalini.picaComic
+      xcode: 15.0 #latest # <-- set to specific version e.g. 14.3, 15.0 to avoid unexpected updates.
+      flutter: stable
+    cache:
+      cache_paths:
+        - $CM_BUILD_DIR/node_modules
+    scripts:
+      - name: Set up code signing settings on Xcode project
+        script: |
+          xcode-project use-profiles
+      - name: Build iOS
+        script: |
+          xcode-select --switch /Applications/Xcode_16.4.app
+          flutter pub get
+          flutter build ios --release --no-codesign
+          mkdir -p build/ios/iphoneos/Payload
+          mv build/ios/iphoneos/Runner.app build/ios/iphoneos/Payload
+          cd build/ios/iphoneos/
+          zip -r app-ios.ipa Payload
+    artifacts:
+      - build/ios/iphoneos/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - flutter_drive.log
+  android-workflow:
+    name: Android workflow
+    environment:
+      android_signing:
+        - PicaComic
+      xcode: latest
+      #java: 1.8
+      java: 17
+    cache:
+      cache_paths:
+        - $CM_BUILD_DIR/node_modules
+    scripts:
+      - name: Install dependencies
+        script: |
+          #$ANDROID_SDK_ROOT/tools/bin/sdkmanager --install "build-tools;35.0.0" "platforms;android-35" "platform-tools"
+      - name: Build Android
+        script: |
+          cp $CM_KEYSTORE_PATH android/app/key.store
+          touch android/key.properties
+          sed -i '.bak' "s/keyAlias\ /keyAlias \"$CM_KEY_ALIAS\" \/\//g" android/app/build.gradle
+          sed -i '.bak' "s/keyPassword\ /keyPassword \"$CM_KEY_PASSWORD\" \/\//g" android/app/build.gradle
+          sed -i '.bak' "s/storeFile\ /storeFile file(\"key.store\") \/\//g" android/app/build.gradle
+          sed -i '.bak' "s/storePassword\ /storePassword \"$CM_KEYSTORE_PASSWORD\" \/\//g" android/app/build.gradle
+          flutter pub get
+          flutter build apk --release
+    artifacts:
+      - build/app/outputs/flutter-apk/app-release.apk
+      - flutter_drive.log
