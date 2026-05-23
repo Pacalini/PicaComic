@@ -244,4 +244,43 @@ class NhentaiComicPage extends BaseComicPage<NhentaiComic> {
 
   @override
   String get sourceKey => 'nhentai';
+  
+  @override
+  Future<NhentaiComic?> loadLocalData() async {
+    String title = '', cover = '', subTitle = '';
+    bool found = false;
+    final h = pageHistory;
+    if (h != null && h.title.isNotEmpty) {
+      title = h.title; cover = h.cover; subTitle = h.subtitle; found = true;
+    }
+    if (!found) {
+      try {
+        final dlId = DownloadManager().generateId(sourceKey, id);
+        if (DownloadManager().isExists(dlId)) {
+          final dl = await DownloadManager().getComicOrNull(dlId);
+          if (dl != null && dl.name.isNotEmpty) {
+            title = dl.name; subTitle = dl.subTitle;
+            cover = 'file://${DownloadManager().path}/${DownloadManager().getDirectory(dlId)}/cover.jpg';
+            found = true;
+          }
+        }
+      } catch (_) {}
+    }
+    if (!found) {
+      try {
+        final folders = await LocalFavoritesManager().find(id, const FavoriteType(6));
+        if (folders.isNotEmpty) {
+          final item = LocalFavoritesManager().getComic(folders.first, id, const FavoriteType(6));
+          title = item.name; subTitle = item.author; cover = item.coverPath; found = true;
+        }
+      } catch (_) {}
+    }
+    if (!found) return null;
+    try {
+      return NhentaiComic.fromMap({
+        "id": id, "title": title,
+        "subTitle": subTitle, "cover": cover,
+      });
+    } catch (_) { return null; }
+  }
 }

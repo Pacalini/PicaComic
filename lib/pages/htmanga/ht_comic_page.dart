@@ -177,6 +177,47 @@ class HtComicPage extends BaseComicPage<HtComicInfo> {
 
   @override
   String get sourceKey => 'htmanga';
+
+  @override
+  Future<HtComicInfo?> loadLocalData() async {
+    String title = '', cover = '', subTitle = '';
+    bool found = false;
+    final h = pageHistory;
+    if (h != null && h.title.isNotEmpty) {
+      title = h.title; cover = h.cover; subTitle = h.subtitle; found = true;
+    }
+    if (!found) {
+      try {
+        final dlId = DownloadManager().generateId(sourceKey, id);
+        if (DownloadManager().isExists(dlId)) {
+          final dl = await DownloadManager().getComicOrNull(dlId);
+          if (dl != null && dl.name.isNotEmpty) {
+            title = dl.name; subTitle = dl.subTitle;
+            cover = 'file://${DownloadManager().path}/${DownloadManager().getDirectory(dlId)}/cover.jpg';
+            found = true;
+          }
+        }
+      } catch (_) {}
+    }
+    if (!found) {
+      try {
+        final folders = await LocalFavoritesManager().find(id, const FavoriteType(4));
+        if (folders.isNotEmpty) {
+          final item = LocalFavoritesManager().getComic(folders.first, id, const FavoriteType(4));
+          title = item.name; subTitle = item.author; cover = item.coverPath; found = true;
+        }
+      } catch (_) {}
+    }
+    if (!found) return null;
+    try {
+      return HtComicInfo.fromJson({
+        "id": id, "coverPath": cover, "name": title,
+        "category": "", "pages": 0, "tags": <String, String>{},
+        "description": "", "uploader": subTitle,
+        "avatar": "", "uploadNum": 0
+      });
+    } catch (_) { return null; }
+  }
 }
 
 class HtComicPageLogic extends StateController {

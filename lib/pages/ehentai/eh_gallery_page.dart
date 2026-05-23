@@ -51,7 +51,51 @@ class EhGalleryPage extends BaseComicPage<Gallery> {
           ),
         );
       };
+  
+  @override
+  Future<Gallery?> loadLocalData() async {
+    String title = '', cover = '', subTitle = '';
+    bool found = false;
+    final h = pageHistory;
+    if (h != null && h.title.isNotEmpty) {
+      title = h.title; cover = h.cover; subTitle = h.subtitle; found = true;
+    }
+    if (!found) {
+      try {
+        final dlId = DownloadManager().generateId(sourceKey, id);
+        if (DownloadManager().isExists(dlId)) {
+          final dl = await DownloadManager().getComicOrNull(dlId);
+          if (dl != null && dl.name.isNotEmpty) {
+            title = dl.name; subTitle = dl.subTitle;
+            cover = 'file://${DownloadManager().path}/${DownloadManager().getDirectory(dlId)}/cover.jpg';
+            found = true;
+          }
+        }
+      } catch (_) {}
+    }
+    if (!found) {
+      try {
+        final folders = await LocalFavoritesManager().find(id, const FavoriteType(1));
+        if (folders.isNotEmpty) {
+          final item = LocalFavoritesManager().getComic(folders.first, id, const FavoriteType(1));
+          title = item.name; subTitle = item.author; cover = item.coverPath; found = true;
+        }
+      } catch (_) {}
+    }
+    if (!found) return null;
+    try {
+      return Gallery.fromJson({
+        "title": title, "subTitle": subTitle,
+        "type": "", "time": "", "uploader": subTitle,
+        "stars": 0.0, "rating": null, "coverPath": cover,
+        "tags": <String, List<String>>{}, "favorite": false,
+        "link": id, "maxPage": "0", "pageSize": 20,
+        "ext": "jpg", "width": 100
+      });
+    } catch (_) { return null; }
+  }
 
+  
   @override
   String? get cover => (comicCover ?? data?.coverPath)
       ?.replaceFirst("s.exhentai.org", "ehgt.org");

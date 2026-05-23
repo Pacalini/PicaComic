@@ -40,7 +40,53 @@ class PicacgComicPage extends BaseComicPage<ComicItem> {
 
   @override
   bool get isLiked => data!.isLiked;
+  
+  @override
+  Future<ComicItem?> loadLocalData() async {
+    String title = '', cover = '', subTitle = '';
+    bool found = false;
+    final h = pageHistory;
+    if (h != null && h.title.isNotEmpty) {
+      title = h.title; cover = h.cover; subTitle = h.subtitle; found = true;
+    }
+    if (!found) {
+      try {
+        final dlId = DownloadManager().generateId(sourceKey, id);
+        if (DownloadManager().isExists(dlId)) {
+          final dl = await DownloadManager().getComicOrNull(dlId);
+          if (dl != null && dl.name.isNotEmpty) {
+            title = dl.name; subTitle = dl.subTitle;
+            cover = 'file://${DownloadManager().path}/${DownloadManager().getDirectory(dlId)}/cover.jpg';
+            found = true;
+          }
+        }
+      } catch (_) {}
+    }
+    if (!found) {
+      try {
+        final folders = await LocalFavoritesManager().find(id, const FavoriteType(0));
+        if (folders.isNotEmpty) {
+          final item = LocalFavoritesManager().getComic(folders.first, id, const FavoriteType(0));
+          title = item.name; subTitle = item.author; cover = item.coverPath; found = true;
+        }
+      } catch (_) {}
+    }
+    if (!found) return null;
+    try {
+      return ComicItem.fromJson({
+        "creator": {"id": "", "title": "", "email": "", "name": "",
+                     "level": 0, "exp": 0, "avatarUrl": "",
+                     "frameUrl": null, "isPunched": null, "slogan": null},
+        "id": id, "title": title, "thumbUrl": cover,
+        "description": "", "author": subTitle, "chineseTeam": "",
+        "categories": <String>[], "tags": <String>[],
+        "likes": 0, "comments": 0, "isLiked": false, "isFavourite": false,
+        "epsCount": 0, "time": "0000-00-00 00:00:00", "pagesCount": 0
+      });
+    } catch (_) { return null; }
+  }
 
+  
   @override
   void openFavoritePanel() {
     favoriteComic(FavoriteComicWidget(

@@ -199,6 +199,48 @@ class JmComicPage extends BaseComicPage<JmComicInfo> {
 
   @override
   String get sourceKey => "jm";
+
+
+  @override
+  Future<JmComicInfo?> loadLocalData() async {
+    String title = '', cover = '', subTitle = '';
+    bool found = false;
+    final h = pageHistory;
+    if (h != null && h.title.isNotEmpty) {
+      title = h.title; cover = h.cover; subTitle = h.subtitle; found = true;
+    }
+    if (!found) {
+      try {
+        final dlId = DownloadManager().generateId(sourceKey, id);
+        if (DownloadManager().isExists(dlId)) {
+          final dl = await DownloadManager().getComicOrNull(dlId);
+          if (dl != null && dl.name.isNotEmpty) {
+            title = dl.name; subTitle = dl.subTitle;
+            cover = 'file://${DownloadManager().path}/${DownloadManager().getDirectory(dlId)}/cover.jpg';
+            found = true;
+          }
+        }
+      } catch (_) {}
+    }
+    if (!found) {
+      try {
+        final folders = await LocalFavoritesManager().find(id, const FavoriteType(2));
+        if (folders.isNotEmpty) {
+          final item = LocalFavoritesManager().getComic(folders.first, id, const FavoriteType(2));
+          title = item.name; subTitle = item.author; cover = item.coverPath; found = true;
+        }
+      } catch (_) {}
+    }
+    if (!found) return null;
+    try {
+      return JmComicInfo.fromMap({
+        "name": title, "id": id, "author": <String>[subTitle],
+        "description": "", "series": <String, String>{},
+        "tags": <String>[], "works": <String>[],
+        "actors": <String>[], "epNames": <String>[]
+      });
+    } catch (_) { return null; }
+  }
 }
 
 void downloadComic(JmComicInfo comic, BuildContext context) async {
