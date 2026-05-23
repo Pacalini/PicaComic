@@ -566,7 +566,13 @@ class DownloadPage extends StatelessWidget {
                               }
                             }
                             await downloadManager.delete(comics);
-                            logic.refresh();
+                            //logic.refresh();
+                              logic.comics.removeWhere((c) => comics.contains(c.id));
+                              logic.baseComics.removeWhere((c) => comics.contains(c.id));
+                              logic.searchMode = false;
+                              logic.selecting = false;
+                              logic.resetSelected(logic.comics.length);
+                              logic.update();
                           },
                           child: Text("确认".tl)),
                     ],
