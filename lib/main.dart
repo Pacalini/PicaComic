@@ -194,12 +194,14 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         theme: ThemeData(
           colorScheme: lightColor,
           useMaterial3: true,
-          fontFamily: App.isWindows ? "font" : "",
+          fontFamily: App.isWindows ? "font" : null,
+          fontFamilyFallback: const ['sans-serif', 'Roboto', 'Noto Sans CJK SC'],
         ),
         darkTheme: ThemeData(
           colorScheme: darkColor,
           useMaterial3: true,
-          fontFamily: App.isWindows ? "font" : "",
+          fontFamily: App.isWindows ? "font" : null,
+          fontFamilyFallback: const ['sans-serif', 'Roboto', 'Noto Sans CJK SC'],
           brightness: Brightness.dark,
         ),
         themeMode: appdata.appSettings.darkMode == 2
