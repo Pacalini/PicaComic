@@ -34,7 +34,9 @@ jobs:
       - run: sudo xcode-select --switch /Applications/Xcode_16.4.app
       - run: flutter pub get
       - run: flutter build macos --release
+      - run: sh macos/scripts/codesign_release.sh
+      - run: ditto -c -k --sequesterRsrc --keepParent build/macos/Build/Products/Release/pica_comic.app macos-build.zip
       - uses: actions/upload-artifact@v4
         with:
-          name: macos-build.zip
-          path: build/macos/Build/Products/Release/pica_comic.app
+          name: macos-build
+          path: macos-build.zip

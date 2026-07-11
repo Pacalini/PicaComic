@@ -19,37 +19,16 @@ PODS:
     - Flutter
     - FlutterMacOS
   - OrderedSet (6.0.3)
-  - path_provider_foundation (0.0.1):
-    - Flutter
-    - FlutterMacOS
-  - screen_retriever (0.0.1):
+  - screen_retriever_macos (0.0.1):
     - FlutterMacOS
   - share_plus (0.0.1):
     - FlutterMacOS
   - shared_preferences_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
-  - "sqlite3 (3.46.1+1)":
-    - "sqlite3/common (= 3.46.1+1)"
-  - "sqlite3/common (3.46.1+1)"
-  - "sqlite3/dbstatvtab (3.46.1+1)":
-    - sqlite3/common
-  - "sqlite3/fts5 (3.46.1+1)":
-    - sqlite3/common
-  - "sqlite3/perf-threadsafe (3.46.1+1)":
-    - sqlite3/common
-  - "sqlite3/rtree (3.46.1+1)":
-    - sqlite3/common
-  - sqlite3_flutter_libs (0.0.1):
-    - FlutterMacOS
-    - "sqlite3 (~> 3.46.0+1)"
-    - sqlite3/dbstatvtab
-    - sqlite3/fts5
-    - sqlite3/perf-threadsafe
-    - sqlite3/rtree
   - url_launcher_macos (0.0.1):
     - FlutterMacOS
-  - window_manager (0.2.0):
+  - window_manager (0.5.0):
     - FlutterMacOS
   - zip_flutter (0.0.1):
     - FlutterMacOS
@@ -64,11 +43,9 @@ DEPENDENCIES:
   - flutter_qjs (from `Flutter/ephemeral/.symlinks/plugins/flutter_qjs/macos`)
   - FlutterMacOS (from `Flutter/ephemeral`)
   - local_auth_darwin (from `Flutter/ephemeral/.symlinks/plugins/local_auth_darwin/darwin`)
-  - path_provider_foundation (from `Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin`)
-  - screen_retriever (from `Flutter/ephemeral/.symlinks/plugins/screen_retriever/macos`)
+  - screen_retriever_macos (from `Flutter/ephemeral/.symlinks/plugins/screen_retriever_macos/macos`)
   - share_plus (from `Flutter/ephemeral/.symlinks/plugins/share_plus/macos`)
   - shared_preferences_foundation (from `Flutter/ephemeral/.symlinks/plugins/shared_preferences_foundation/darwin`)
-  - sqlite3_flutter_libs (from `Flutter/ephemeral/.symlinks/plugins/sqlite3_flutter_libs/macos`)
   - url_launcher_macos (from `Flutter/ephemeral/.symlinks/plugins/url_launcher_macos/macos`)
   - window_manager (from `Flutter/ephemeral/.symlinks/plugins/window_manager/macos`)
   - zip_flutter (from `Flutter/ephemeral/.symlinks/plugins/zip_flutter/macos`)
@@ -76,7 +53,6 @@ DEPENDENCIES:
 SPEC REPOS:
   trunk:
     - OrderedSet
-    - sqlite3
 
 EXTERNAL SOURCES:
   app_links:
@@ -97,16 +73,12 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral
   local_auth_darwin:
     :path: Flutter/ephemeral/.symlinks/plugins/local_auth_darwin/darwin
-  path_provider_foundation:
-    :path: Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin
-  screen_retriever:
-    :path: Flutter/ephemeral/.symlinks/plugins/screen_retriever/macos
+  screen_retriever_macos:
+    :path: Flutter/ephemeral/.symlinks/plugins/screen_retriever_macos/macos
   share_plus:
     :path: Flutter/ephemeral/.symlinks/plugins/share_plus/macos
   shared_preferences_foundation:
     :path: Flutter/ephemeral/.symlinks/plugins/shared_preferences_foundation/darwin
-  sqlite3_flutter_libs:
-    :path: Flutter/ephemeral/.symlinks/plugins/sqlite3_flutter_libs/macos
   url_launcher_macos:
     :path: Flutter/ephemeral/.symlinks/plugins/url_launcher_macos/macos
   window_manager:
@@ -115,26 +87,23 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/zip_flutter/macos
 
 SPEC CHECKSUMS:
-  app_links: a68583ef6227edc6298011405a13c38821df5011
-  desktop_webview_window: 2f0cdefecc06e21208a51589bd3d1580a87a703c
-  dynamic_color: b820c000cc68df65e7ba7ff177cb98404ce56651
-  file_selector_macos: 585232b688707857504f9cb5f985a7c97fe4dd30
-  flutter_inappwebview_macos: c2d68649f9f8f1831bfcd98d73fd6256366d9d1d
-  flutter_local_notifications: 453432cd6399a07d072885bc7828fb2307868856
-  flutter_qjs: b61d3c2f46349267e484a87f67fb821f6f7a75db
-  FlutterMacOS: 8f6f14fa908a6fb3fba0cd85dbd81ec4b251fb24
-  local_auth_darwin: d2e8c53ef0c4f43c646462e3415432c4dab3ae19
+  app_links: 4481ed4d71f384b0c3ae5016f4633aa73d32ff67
+  desktop_webview_window: 89bb3d691f4c80314a10be312f4cd35db93a9d5a
+  dynamic_color: 5fdff3953fb3457311091863f72914fc76ea3209
+  file_selector_macos: 3e56eaea051180007b900eacb006686fd54da150
+  flutter_inappwebview_macos: bdf207b8f4ebd58e86ae06cd96b147de99a67c9b
+  flutter_local_notifications: 4b427ffabf278fc6ea9484c97505e231166927a5
+  flutter_qjs: db1a0c42f7fd931566358325b3bc8f3d98cdb93d
+  FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
+  local_auth_darwin: 63c73d6d28cc3e239be2b6aa460ea6e317cd5100
   OrderedSet: e539b66b644ff081c73a262d24ad552a69be3a94
-  path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
-  screen_retriever: 4f97c103641aab8ce183fa5af3b87029df167936
-  share_plus: 3c787998077d6b31e839225a282e9e27edf99274
-  shared_preferences_foundation: 9e1978ff2562383bd5676f64ec4e9aa8fa06a6f7
-  sqlite3: 0bb0e6389d824e40296f531b858a2a0b71c0d2fb
-  sqlite3_flutter_libs: 03311aede9d32fb2d24e32bebb8cd01c3b2e6239
-  url_launcher_macos: de10e46d8d8b9e3a7b8a133e8de92b104379f05e
-  window_manager: 1d01fa7ac65a6e6f83b965471b1a7fdd3f06166c
-  zip_flutter: 84647ba324a4827db98058f749394752867ac052
+  screen_retriever_macos: 038d3f7b34a779b06f536842003e41e8ec1fb4b7
+  share_plus: 76dd39142738f7a68dd57b05093b5e8193f220f7
+  shared_preferences_foundation: 5086985c1d43c5ba4d5e69a4e8083a389e2909e6
+  url_launcher_macos: 175a54c831f4375a6cf895875f716ee5af3888ce
+  window_manager: e25faf20d88283a0d46e7b1a759d07261ca27575
+  zip_flutter: a9fc4fab0e9256b40025afd7a5d3edf3c4f3c309
 
 PODFILE CHECKSUM: 6f22b8c191675c44d2c4a8e91e13daaf2079862b
 
-COCOAPODS: 1.16.2
+COCOAPODS: 1.15.2
