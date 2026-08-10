@@ -115,16 +115,24 @@ class _SearchResultPageState extends State<_SearchResultPage> {
   @override
   void initState() {
     controller.text = keyword.trim();
-    if (!keyword.contains('language') &&
+    keyword = _applyLanguageFilter(keyword);
+    suggestionsController = _SuggestionsController(controller);
+    super.initState();
+  }
+
+  /// 自动添加语言筛选
+  ///
+  /// 如果该源启用了语言筛选, 且设置中选择了语言, 则在关键字后追加 `language:xxx`
+  String _applyLanguageFilter(String raw) {
+    if (!raw.contains('language') &&
         ComicSource.find(sourceKey)?.searchPageData?.enableLanguageFilter ==
             true) {
       var lang = int.tryParse(appdata.settings[69]) ?? 0;
       if (lang != 0) {
-        keyword += " language:${["chinese", "english", "japanese"][lang - 1]}";
+        raw += " language:${["chinese", "english", "japanese"][lang - 1]}";
       }
     }
-    suggestionsController = _SuggestionsController(controller);
-    super.initState();
+    return raw;
   }
 
   @override
@@ -205,7 +213,7 @@ class _SearchResultPageState extends State<_SearchResultPage> {
               onPressed: () {
                 var s = controller.text;
                 setState(() {
-                  keyword = s;
+                  keyword = _applyLanguageFilter(s);
                 });
               },
             )
@@ -244,7 +252,7 @@ class _SearchResultPageState extends State<_SearchResultPage> {
                   suggestionsController.remove();
                   if (s == keyword) return;
                   setState(() {
-                    keyword = s;
+                    keyword = _applyLanguageFilter(s);
                   });
                 },
                 controller: controller,
