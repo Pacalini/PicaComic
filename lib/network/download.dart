@@ -144,8 +144,15 @@ class DownloadManager with _DownloadDb implements Listenable {
       try {
         var json = const JsonDecoder().convert(file.readAsStringSync());
         for (var item in json["downloading"]) {
-          downloading.add(
-              downloadingItemFromMap(item, _onFinish, _onError, _saveInfo));
+          var downloadItem = downloadingItemFromMap(
+              item, _onFinish, _onError, _saveInfo);
+          if (downloading.any((element) => element.id == downloadItem.id)) {
+            // 旧版本可能出现同一漫画的重复下载任务, 只保留最先读取到的一条
+            LogManager.addLog(LogLevel.info, "Download",
+                "Discard duplicate download task: ${downloadItem.id}");
+            continue;
+          }
+          downloading.add(downloadItem);
         }
       } catch (e, s) {
         LogManager.addLog(LogLevel.error, "IO",
@@ -455,84 +462,63 @@ DownloadingItem downloadingItemFromMap(
 }
 
 extension AddDownloadExt on DownloadManager {
-  ///添加哔咔漫画下载
-  void addPicDownload(ComicItem comic, List<int> downloadEps) {
-    downloading.addLast(PicDownloadingItem(
-        comic, downloadEps, _onFinish, _onError, _saveInfo, comic.id));
+  /// 添加任务到下载队列, 同一漫画(id相同)不允许重复添加, 防止重复下载
+  /// 以及下载界面出现重复任务
+  void _enqueueDownload(DownloadingItem item) {
+    if (downloading.any((e) => e.id == item.id)) {
+      return;
+    }
+    downloading.addLast(item);
     _saveInfo();
     if (!isDownloading) {
       downloading.first.start();
       isDownloading = true;
     }
+  }
+
+  ///添加哔咔漫画下载
+  void addPicDownload(ComicItem comic, List<int> downloadEps) {
+    _enqueueDownload(PicDownloadingItem(
+        comic, downloadEps, _onFinish, _onError, _saveInfo, comic.id));
   }
 
   ///添加E-Hentai下载
   void addEhDownload(Gallery gallery, [int type = 0]) {
     final id = getGalleryId(gallery.link);
-    downloading.addLast(
+    _enqueueDownload(
         EhDownloadingItem(gallery, _onFinish, _onError, _saveInfo, id, type));
-    _saveInfo();
-    if (!isDownloading) {
-      downloading.first.start();
-      isDownloading = true;
-    }
   }
 
   ///添加禁漫下载
   void addJmDownload(JmComicInfo comic, List<int> downloadEps) {
-    downloading.addLast(JmDownloadingItem(
+    _enqueueDownload(JmDownloadingItem(
         comic, downloadEps, _onFinish, _onError, _saveInfo, "jm${comic.id}"));
-    _saveInfo();
-    if (!isDownloading) {
-      downloading.first.start();
-      isDownloading = true;
-    }
   }
 
   ///添加Hitomi下载
   void addHitomiDownload(HitomiComic comic, String cover, String link) {
     final id = "hitomi${comic.id}";
-    downloading.addLast(HitomiDownloadingItem(
+    _enqueueDownload(HitomiDownloadingItem(
         comic, cover, link, _onFinish, _onError, _saveInfo, id));
-    _saveInfo();
-    if (!isDownloading) {
-      downloading.first.start();
-      isDownloading = true;
-    }
   }
 
   ///添加绅士漫画下载
   void addHtDownload(HtComicInfo comic) {
     final id = "Ht${comic.id}";
-    downloading
-        .addLast(DownloadingHtComic(comic, _onFinish, _onError, _saveInfo, id));
-    _saveInfo();
-    if (!isDownloading) {
-      downloading.first.start();
-      isDownloading = true;
-    }
+    _enqueueDownload(
+        DownloadingHtComic(comic, _onFinish, _onError, _saveInfo, id));
   }
 
   void addNhentaiDownload(NhentaiComic comic) {
     final id = "nhentai${comic.id}";
-    downloading.addLast(
+    _enqueueDownload(
         NhentaiDownloadingItem(comic, _onFinish, _onError, _saveInfo, id));
-    _saveInfo();
-    if (!isDownloading) {
-      downloading.first.start();
-      isDownloading = true;
-    }
   }
 
   void addCustomDownload(ComicInfoData comic, List<int> downloadEps) {
     var id = generateId(comic.sourceKey, comic.comicId);
-    downloading.addLast(CustomDownloadingItem(
+    _enqueueDownload(CustomDownloadingItem(
         comic, downloadEps, _onFinish, _onError, _saveInfo, id));
-    _saveInfo();
-    if (!isDownloading) {
-      downloading.first.start();
-      isDownloading = true;
-    }
   }
 
   void addFavoriteDownload(FavoriteItem comic) {
@@ -545,13 +531,8 @@ extension AddDownloadExt on DownloadManager {
       6 => "nhentai${comic.target}",
       _ => generateId(comic.type.comicSource.key, comic.target)
     };
-    downloading.addLast(
+    _enqueueDownload(
         FavoriteDownloading(comic, _onFinish, _onError, _saveInfo, id));
-    _saveInfo();
-    if (!isDownloading) {
-      downloading.first.start();
-      isDownloading = true;
-    }
   }
 }
 

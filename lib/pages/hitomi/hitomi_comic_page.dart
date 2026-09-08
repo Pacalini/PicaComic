@@ -214,12 +214,13 @@ class HitomiComicPage extends BaseComicPage<HitomiComic> {
 
 void _downloadComic(
     HitomiComic comic, BuildContext context, String cover, String link) {
-  if (downloadManager.isExists(comic.id)) {
+  final id = "hitomi${comic.id}";
+  if (downloadManager.isExists(id)) {
     showToast(message: "已下载".tl);
     return;
   }
   for (var i in downloadManager.downloading) {
-    if (i.id == comic.id) {
+    if (i.id == id) {
       showToast(message: "下载中".tl);
       return;
     }

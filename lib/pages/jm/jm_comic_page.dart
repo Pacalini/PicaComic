@@ -202,8 +202,9 @@ class JmComicPage extends BaseComicPage<JmComicInfo> {
 }
 
 void downloadComic(JmComicInfo comic, BuildContext context) async {
+  final id = "jm${comic.id}";
   for (var i in downloadManager.downloading) {
-    if (i.id == comic.id) {
+    if (i.id == id) {
       showToast(message: "下载中".tl);
       return;
     }
@@ -218,9 +219,9 @@ void downloadComic(JmComicInfo comic, BuildContext context) async {
   }
 
   var downloaded = <int>[];
-  if (DownloadManager().isExists("jm${comic.id}")) {
+  if (DownloadManager().isExists(id)) {
     var downloadedComic =
-        (await DownloadManager().getComicOrNull("jm${comic.id}"))!
+        (await DownloadManager().getComicOrNull(id))!
         as DownloadedJmComic;
     downloaded.addAll(downloadedComic.downloadedEps);
   }

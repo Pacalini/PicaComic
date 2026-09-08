@@ -113,7 +113,7 @@ class FavoriteItem {
         ComicType.hitomi => RegExp(r"\d+(?=\.html)").hasMatch(target)
             ? "hitomi${RegExp(r"\d+(?=\.html)").firstMatch(target)?[0]}"
             : target,
-        ComicType.htManga => "ht$target",
+        ComicType.htManga => "Ht$target",
         ComicType.nhentai => "nhentai$target",
         _ => DownloadManager().generateId(type.comicSource.key, target)
       };
