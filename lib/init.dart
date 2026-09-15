@@ -75,7 +75,12 @@ Future<void> init() async {
 
     await JsEngine().init();
 
-    await ComicSource.init();
+    try {
+      await ComicSource.init();
+    } catch (e, s) {
+      LogManager.addLog(
+          LogLevel.error, "Init", "ComicSource init failed!\n$e$s");
+    }
 
     await Future.wait([
       downloadManager.init(),

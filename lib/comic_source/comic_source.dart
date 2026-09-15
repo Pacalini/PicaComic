@@ -65,10 +65,15 @@ class ComicSource {
   static Future<void> init() async {
     for (var source in builtInSources) {
       if (appdata.appSettings.isComicSourceEnabled(source)) {
-        var s = builtIn.firstWhere((e) => e.key == source);
-        sources.add(s);
-        await s.loadData();
-        s.initData?.call(s);
+        try {
+          var s = builtIn.firstWhere((e) => e.key == source);
+          sources.add(s);
+          await s.loadData();
+          s.initData?.call(s);
+        } catch (e, s) {
+          log("Failed to init accounts data $source: $e\n$s", "ComicSource",
+              LogLevel.error);
+        }
       }
     }
     final path = "${App.dataPath}/comic_source";
@@ -161,7 +166,13 @@ class ComicSource {
   Future<void> loadData() async {
     var file = File("${App.dataPath}/comic_source/$key.data");
     if (await file.exists()) {
-      data = Map.from(jsonDecode(await file.readAsString()));
+      try {
+        data = Map.from(jsonDecode(await file.readAsString()));
+      } catch (e, s) {
+        // 数据文件为空或损坏时，回退到空数据
+        log("Failed to load data of $key: $e\n$s", "ComicSource", LogLevel.error);
+        data = <String, dynamic>{};
+      }
     }
   }
 
