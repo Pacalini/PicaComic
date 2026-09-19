@@ -1,0 +1,239 @@
+name: Build installers
+
+# 手动触发, 构建全平台安装包并作为附件上传到 GitHub Release
+run-name: Build installers for ${{ github.ref_name }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: '要上传到的 release tag'
+        required: true
+        default: 'v4.2.12-pica1'
+        type: string
+
+permissions:
+  contents: write
+
+env:
+  RELEASE_TAG: ${{ inputs.tag }}
+
+jobs:
+  android:
+    name: Android
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # 固定到项目基线版本: 上游 v4.2.11 就是用它发布的。
+      # 用最新的 stable 会因工具链过新而失败(例如 Kotlin 版本下限、MSVC 弃用报错)。
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.6'
+          channel: 'stable'
+          architecture: x64
+          cache: true
+
+      # android/app/build.gradle 会无条件读取 key.properties, 缺少时构建直接失败
+      - name: Write signing config
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::error::secret ANDROID_KEYSTORE_BASE64 未设置, 无法签名 release APK"
+            exit 1
+          fi
+          # 只打印长度, 不打印内容: 用于确认 secret 没有被写入额外的换行
+          echo "keystore b64 len=${#KEYSTORE_BASE64} storePass len=${#KEYSTORE_PASSWORD} keyPass len=${#KEY_PASSWORD} alias=$KEY_ALIAS"
+          echo "$KEYSTORE_BASE64" | base64 --decode > android/app/release-key.jks
+          printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=release-key.jks\n' \
+            "$KEYSTORE_PASSWORD" "$KEY_PASSWORD" "$KEY_ALIAS" > android/key.properties
+          keytool -list -keystore android/app/release-key.jks \
+            -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS" > /dev/null \
+            && echo "keystore 与密码校验通过"
+
+      # android/local.properties 未纳入版本控制, CI 上不存在, 会导致 Gradle
+      # 回退到 versionCode 1 / versionName 1.0, 使每次发布版本号相同而无法覆盖安装。
+      # 这里显式从 pubspec.yaml 取值并传给 flutter, 由它写入 local.properties。
+      - name: Build APK
+        run: |
+          VERSION=$(grep -m1 '^version:' pubspec.yaml | sed 's/^version:[[:space:]]*//')
+          NAME=${VERSION%%+*}
+          CODE=${VERSION##*+}
+          echo "构建版本: name=$NAME code=$CODE"
+          flutter build apk --release --build-name "$NAME" --build-number "$CODE"
+
+      - name: Collect APKs
+        run: |
+          sudo apt-get update -y && sudo apt-get install -y zip
+          mkdir -p out
+          shopt -s nullglob
+          for f in build/app/outputs/flutter-apk/*.apk; do
+            base=$(basename "$f" .apk)
+            abi=${base#PicaComic-*-}
+            cp "$f" "out/PicaComic-${abi}-${GITHUB_SHA::7}.apk"
+          done
+          ls -lh out
+
+      # 合并签名方案对齐问题说明: 本构建使用自签名密钥, 与上游 release 的签名不同,
+      # 因此无法覆盖安装上游版本, 需要先卸载后安装
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: out/*.apk
+
+      - name: Upload to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$RELEASE_TAG" out/*.apk --clobber
+
+  linux:
+    name: Linux
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # 固定到项目基线版本: 上游 v4.2.11 就是用它发布的。
+      # 用最新的 stable 会因工具链过新而失败(例如 Kotlin 版本下限、MSVC 弃用报错)。
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.6'
+          channel: 'stable'
+          architecture: x64
+          cache: true
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y ninja-build libgtk-3-dev libwebkit2gtk-4.1-dev
+
+      - name: Build
+        run: flutter build linux --release
+
+      - name: Package
+        run: |
+          mkdir -p out
+          cd build/linux/x64/release
+          tar -czf "$GITHUB_WORKSPACE/out/PicaComic-linux-x64-${GITHUB_SHA::7}.tar.gz" bundle
+          cd "$GITHUB_WORKSPACE"
+          ls -lh out
+
+      - name: Upload to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$RELEASE_TAG" out/*.tar.gz --clobber
+
+  windows:
+    name: Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # 固定到项目基线版本: 上游 v4.2.11 就是用它发布的。
+      # 用最新的 stable 会因工具链过新而失败(例如 Kotlin 版本下限、MSVC 弃用报错)。
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.6'
+          channel: 'stable'
+          architecture: x64
+          cache: true
+
+      # windows-latest 的 MSVC 14.51 开始, <experimental/coroutine> 变成硬报错,
+      # 而 flutter_inappwebview_windows 与 local_auth_windows 仍在用它。
+      # 这里在 CI 里临时给项目打补丁, 不把该改动带进仓库。
+      - name: Silence experimental coroutine error (MSVC 14.51)
+        shell: pwsh
+        run: |
+          $f = "windows/CMakeLists.txt"
+          $content = Get-Content $f -Raw
+          if ($content -notmatch "_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS") {
+            $marker = "# Use Unicode for all projects."
+            $patch = @'
+          # MSVC 14.51 起 <experimental/coroutine> 会直接报错, 部分插件仍依赖它
+          add_compile_definitions(_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS)
+
+          '@ + $marker
+            $content = $content.Replace($marker, $patch)
+            Set-Content -Path $f -Value $content -NoNewline
+            Write-Host "已注入编译定义"
+          }
+          Select-String -Path $f -Pattern "COROUTINE" | Select-Object -First 2
+
+      - name: Build
+        run: flutter build windows --release
+
+      - name: Package
+        shell: pwsh
+        run: |
+          $sha = "${{ github.sha }}".Substring(0,7)
+          $out = Join-Path $env:GITHUB_WORKSPACE "out"
+          New-Item -ItemType Directory -Force -Path $out | Out-Null
+          Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath "$out/PicaComic-windows-x64-$sha.zip" -Force
+          Get-ChildItem $out | Format-Table Name, Length
+
+      - name: Upload to release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$env:RELEASE_TAG" (Get-ChildItem out/*.zip).FullName --clobber
+
+  apple:
+    name: iOS + macOS
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      # 固定到项目基线版本: 上游 v4.2.11 就是用它发布的。
+      # 用最新的 stable 会因工具链过新而失败(例如 Kotlin 版本下限、MSVC 弃用报错)。
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.6'
+          channel: 'stable'
+          architecture: x64
+          cache: true
+
+      - name: Select Xcode
+        run: sudo xcode-select --switch /Applications/Xcode_16.4.app
+
+      - name: Build iOS (unsigned)
+        run: flutter build ios --release --no-codesign
+
+      - name: Package IPA
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/out"
+          cd build/ios/iphoneos
+          mkdir -p Payload
+          mv Runner.app Payload/
+          zip -qry "$GITHUB_WORKSPACE/out/PicaComic-ios-${GITHUB_SHA::7}.ipa" Payload
+          ls -lh "$GITHUB_WORKSPACE/out"
+
+      - name: Build macOS
+        run: flutter build macos --release
+
+      - name: Package macOS
+        run: |
+          cd build/macos/Build/Products/Release
+          # 未签名的 app 直接分发会被 Gatekeeper 拦下, 这里附上处理说明
+          cat > 安装说明.txt <<'EOF'
+          本应用未使用 Apple 开发者证书签名, 首次打开需要执行:
+
+              xattr -dr com.apple.quarantine /Applications/pica_comic.app
+
+          或在"系统设置 -> 隐私与安全性"中点击"仍要打开"。
+          EOF
+          zip -qry "$GITHUB_WORKSPACE/out/PicaComic-macos-${GITHUB_SHA::7}.zip" pica_comic.app 安装说明.txt
+          cd "$GITHUB_WORKSPACE"
+          ls -lh out
+
+      - name: Upload to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$RELEASE_TAG" out/*.ipa out/*.zip --clobber

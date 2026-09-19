@@ -223,6 +223,33 @@ Future<bool> runningExportComics(List<ExportComicData> datas) async {
   }
 }
 
+/// 保存导出的图片, 移动端逐个弹出保存对话框, 桌面端选择一次目录
+Future<bool> exportImages(List<File> images) async {
+  if (images.isEmpty) {
+    return false;
+  }
+  try {
+    if (App.isMobile) {
+      for (var file in images) {
+        var params = SaveFileDialogParams(sourceFilePath: file.path);
+        await FlutterFileDialog.saveFile(params: params);
+      }
+    } else {
+      final String? directoryPath = await getDirectoryPath();
+      if (directoryPath == null) {
+        return false;
+      }
+      for (var file in images) {
+        await file.copy('$directoryPath$pathSep${file.name}');
+      }
+    }
+    return true;
+  } catch (e, s) {
+    LogManager.addLog(LogLevel.error, "Save Image", "$e\n$s");
+    return false;
+  }
+}
+
 Future<void> eraseCache() async {
   return CacheManager().clear();
 }

@@ -3,18 +3,34 @@ import 'package:pica_comic/tools/translations.dart';
 
 class SelectDownloadChapter extends StatefulWidget {
   const SelectDownloadChapter(this.eps, this.finishSelect, this.downloadedEps,
-      {Key? key})
+      {Key? key,
+      this.title,
+      this.allButtonText,
+      this.selectButtonText,
+      this.initialSelected})
       : super(key: key);
   final List<String> eps;
   final void Function(List<int>) finishSelect;
   final List<int> downloadedEps;
+
+  /// 标题, 默认为"下载漫画"
+  final String? title;
+
+  /// 左侧按钮的文案, 默认为"下载全部"
+  final String? allButtonText;
+
+  /// 右侧按钮的文案, 默认为"下载选择"
+  final String? selectButtonText;
+
+  /// 初始勾选的章节, 默认为空
+  final List<int>? initialSelected;
 
   @override
   State<SelectDownloadChapter> createState() => _SelectDownloadChapterState();
 }
 
 class _SelectDownloadChapterState extends State<SelectDownloadChapter> {
-  List<int> selected = [];
+  late List<int> selected = widget.initialSelected?.toList() ?? [];
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +42,7 @@ class _SelectDownloadChapterState extends State<SelectDownloadChapter> {
           Padding(
             padding: const EdgeInsets.fromLTRB(0, 16, 0, 16),
             child: Text(
-              "下载漫画".tl,
+              widget.title ?? "下载漫画".tl,
               style: const TextStyle(fontSize: 22),
             ),
           ),
@@ -108,7 +124,7 @@ class _SelectDownloadChapterState extends State<SelectDownloadChapter> {
                         }
                         widget.finishSelect(res);
                       },
-                      child: Text("下载全部".tl)),
+                      child: Text(widget.allButtonText ?? "下载全部".tl)),
                 ),
                 const SizedBox(
                   width: 16,
@@ -118,7 +134,7 @@ class _SelectDownloadChapterState extends State<SelectDownloadChapter> {
                       onPressed: () {
                         widget.finishSelect(selected);
                       },
-                      child: Text("下载选择".tl)),
+                      child: Text(widget.selectButtonText ?? "下载选择".tl)),
                 ),
                 const SizedBox(
                   width: 16,

@@ -572,10 +572,10 @@ class _SettingsPageState extends State<SettingsPage> implements PopEntry{
           title: Text("下载并行".tl),
           leading: const Icon(Icons.download),
           trailing: Select(
-            initialValue: ["1", "2", "4", "6", "8", "16"].indexOf(appdata.settings[79]),
-            values: const ["1", "2", "4", "6", "8", "16"],
+            initialValue: ["1", "2", "4", "6", "8", "16", "32"].indexOf(appdata.settings[79]),
+            values: const ["1", "2", "4", "6", "8", "16", "32"],
             onChange: (value) {
-              appdata.settings[79] = ["1", "2", "4", "6", "8", "16"][value];
+              appdata.settings[79] = ["1", "2", "4", "6", "8", "16", "32"][value];
               appdata.updateSettings();
             },
           ),

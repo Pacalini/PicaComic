@@ -17,8 +17,11 @@ import 'package:pica_comic/pages/comic_page.dart';
 import 'package:pica_comic/pages/picacg/comic_page.dart';
 import 'package:pica_comic/pages/reader/comic_reading_page.dart';
 import 'package:pica_comic/tools/extensions.dart';
+import 'package:pica_comic/tools/io_extensions.dart';
 import 'package:pica_comic/tools/io_tools.dart';
+import 'package:pica_comic/tools/long_image.dart';
 import 'package:pica_comic/foundation/ui_mode.dart';
+import 'package:pica_comic/foundation/log.dart';
 import 'package:pica_comic/tools/pdf.dart';
 import 'package:pica_comic/tools/tags_translation.dart';
 import 'package:pica_comic/pages/downloading_page.dart';
@@ -34,6 +37,7 @@ import 'package:pica_comic/network/picacg_network/picacg_download_model.dart';
 import 'dart:io';
 import 'package:pica_comic/tools/translations.dart';
 import 'package:pica_comic/components/components.dart';
+import 'package:pica_comic/components/select_download_eps.dart';
 
 import 'htmanga/ht_comic_page.dart';
 
@@ -372,6 +376,114 @@ class DownloadPage extends StatelessWidget {
     }
   }
 
+  ///选择要导出的章节
+  void exportAsLongImage(DownloadedItem? comic, DownloadPageLogic logic) {
+    if (comic == null) {
+      for (int i = 0; i < logic.selected.length; i++) {
+        if (logic.selected[i]) {
+          comic = logic.comics[i];
+        }
+      }
+    }
+    if (comic == null) {
+      showToast(message: "请选择一个漫画".tl);
+      return;
+    }
+    var item = comic;
+    //没有章节的漫画直接导出, 不需要选择章节
+    if (hasChapterDirectories(
+        "${downloadManager.path}/${downloadManager.getDirectory(item.id)}")) {
+      exportLongImages(item, const [0]);
+      return;
+    }
+    //只有一话时也不需要选择章节
+    if (item.downloadedEps.length <= 1) {
+      exportLongImages(item, item.downloadedEps);
+      return;
+    }
+    var content = SelectDownloadChapter(
+      item.eps,
+      (selectedEps) {
+        App.globalBack();
+        if (selectedEps.isEmpty) {
+          return;
+        }
+        exportLongImages(item, selectedEps);
+      },
+      const [],
+      title: "导出为图片".tl,
+      allButtonText: "导出全部".tl,
+      selectButtonText: "导出选择".tl,
+      initialSelected: item.downloadedEps,
+    );
+    if (UiMode.m1(App.globalContext!)) {
+      showModalBottomSheet(
+          context: App.globalContext!, builder: (context) => content);
+    } else {
+      showSideBar(App.globalContext!, content, useSurfaceTintColor: true);
+    }
+  }
+
+  ///把选中的章节导出为长图
+  void exportLongImages(DownloadedItem comic, List<int> eps) async {
+    if (eps.isEmpty) {
+      showToast(message: "请选择章节".tl);
+      return;
+    }
+    var comicPath =
+        "${downloadManager.path}/${downloadManager.getDirectory(comic.id)}";
+    //没有章节的漫画, 所有图片都存放于漫画目录下
+    var noChapters = hasChapterDirectories(comicPath);
+    for (var ep in eps) {
+      if (noChapters && ep != 0) {
+        continue;
+      }
+      if (listChapterImages(comicPath, noChapters ? null : ep).isEmpty) {
+        showToast(message: "未找到已下载的图片".tl);
+        return;
+      }
+    }
+    var controller = showLoadingDialog(
+      App.globalContext!,
+      barrierDismissible: false,
+      allowCancel: false,
+      message: "导出中".tl,
+    );
+    var files = <File>[];
+    var saved = false;
+    try {
+      var name = sanitizeFileName(comic.name);
+      for (var i = 0; i < eps.length; i++) {
+        var ep = noChapters ? 0 : eps[i];
+        var epName = ep < comic.eps.length ? comic.eps[ep] : "${ep + 1}";
+        var fileName =
+            eps.length == 1 ? name : "$name-${sanitizeFileName(epName)}";
+        if (fileName.length > 100) {
+          fileName = fileName.substring(0, 100);
+        }
+        files.add(await createLongImageFromChapter(
+          comicPath: comicPath,
+          chapterIndex: noChapters ? null : ep,
+          savePath: "${App.cachePath}/$fileName.png",
+        ));
+      }
+      controller.close();
+      saved = await exportImages(files);
+    } catch (e, s) {
+      Log.error("Long Image", "$e\n$s");
+      controller.close();
+      showToast(message: "导出失败".tl);
+      deleteTemporaryLongImages(files);
+      return;
+    }
+    deleteTemporaryLongImages(files);
+    if (!saved) {
+      showToast(message: "导出失败".tl);
+    } else {
+      showToast(message: "导出完成".tl);
+    }
+  }
+
   Widget buildItem(BuildContext context, DownloadPageLogic logic, int index) {
     bool selected = logic.selected[index];
     var type = logic.comics[index].type.name;
@@ -494,6 +606,12 @@ class DownloadPage extends StatelessWidget {
                 text: "导出为pdf".tl,
                 onClick: () {
                   exportAsPdf(logic.comics[index], logic);
+                },
+              ),
+              DesktopMenuEntry(
+                text: "导出为图片".tl,
+                onClick: () {
+                  exportAsLongImage(logic.comics[index], logic);
                 },
               ),
               DesktopMenuEntry(
@@ -734,6 +852,12 @@ class DownloadPage extends StatelessWidget {
                     PopupMenuItem(
                       child: Text("导出为pdf".tl),
                       onTap: () => exportAsPdf(null, logic),
+                    ),
+                    PopupMenuItem(
+                      child: Text("导出为图片".tl),
+                      onTap: () => Future.delayed(
+                          const Duration(milliseconds: 200),
+                          () => exportAsLongImage(null, logic)),
                     ),
                     PopupMenuItem(
                       child: Text("查看漫画详情".tl),
